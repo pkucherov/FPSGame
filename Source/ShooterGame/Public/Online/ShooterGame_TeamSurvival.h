@@ -2,13 +2,13 @@
 
 #pragma once
 
-#include "ShooterGame_TeamDeathMatch.generated.h"
+#include "ShooterGame_TeamSurvival.generated.h"
 
 class AShooterPlayerState;
 class AShooterAIController;
 
 UCLASS()
-class AShooterGame_TeamDeathMatch : public AShooterGameMode
+class AShooterGame_TeamSurvival : public AShooterGameMode
 {
 	GENERATED_UCLASS_BODY()
 
