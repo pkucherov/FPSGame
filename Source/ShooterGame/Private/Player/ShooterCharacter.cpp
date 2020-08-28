@@ -1144,7 +1144,7 @@ void AShooterCharacter::Tick(float DeltaSeconds)
 		}
 	}
 
-	//In the Tick function we will draw a line trace every frame that is 200 unreal units long. If the line trace hits an actor that is a class of PickupAndRotateActor, we will set our CurrentItem variable to that actor. Now, depending on if we are holding an object or not, will determine if we zoom in to inspect an object or to put the object in front of our camera to rotate it. So if the player is not holding an object we will increase the FirstPersonCameraComponent's FieldOfView to 45.0f. We will use Lerp to smoothly transition between 90.f and 45.0f. However, if our player is holding a pickup actor, when the players presses the Inspect button the actor will change locations to be in front of the player. Furthermore we will have to change the PlayerCameraManager's ViewPitchMax and ViewPitchMin values to 179.9000002f and -179.9000002f respectively to have full rotational movement for our actor. Lastly, while the Inpect button is being held we will call the CurrentItem's RotateActor function to set the rotation of the actor. We will player and camera movement later on. Below is the Tick function.
+	//In the Tick function we will draw a line trace every frame that is 200 unreal units long. If the line trace hits an actor that is a class of PickupAndRotateActor, we will set our CurrentItem variable to that actor. Now, depending on if we are holding an object or not, will determine if we zoom in to inspect an object or to put the object in front of our camera to rotate it. So if the player is not holding an object we will increase the FirstPersonCameraComponent's FieldOfView to 45.0f. We will use Lerp to smoothly transition between 90.f and 45.0f. However, if our player is holding a pickup actor, when the players presses the Inspect button the actor will change locations to be in front of the player. Furthermore we will have to change the PlayerCameraManager's ViewPitchMax and ViewPitchMin values to 179.9000002f and -179.9000002f respectively to have full rotational movement for our actor. Lastly, while the Inpect button is being held we will call the CurrentItem's RotateActor function to set the rotation of the actor. We will player and camera movement later on. Below is the Tick function. https://github.com/Harrison1/unrealcpp/tree/master/PickupAndRotateActor
 	Start = FirstPersonCameraComponent->GetComponentLocation();
 	ForwardVector = FirstPersonCameraComponent->GetForwardVector();
 	End = ((ForwardVector * 200.f) + Start);
@@ -1395,7 +1395,7 @@ void AShooterCharacter::ToggleMovement()
 {
 	bCanMove = !bCanMove;
 	bInspecting = !bInspecting;
-	//FirstPersonCameraComponent->bUsePawnControlRotation = !FirstPersonCameraComponent->bUsePawnControlRotation;
+	FirstPersonCameraComponent->bUsePawnControlRotation = !FirstPersonCameraComponent->bUsePawnControlRotation;
 	bUseControllerRotationYaw = !bUseControllerRotationYaw;
 }
 

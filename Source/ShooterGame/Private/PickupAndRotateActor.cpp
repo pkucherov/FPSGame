@@ -1,22 +1,22 @@
 // Copyright. All Rights Reserved
+// Helpful Links
+// http://api.unrealengine.com/INT/API/Runtime/Engine/Engine/UWorld/LineTraceSingleByChannel/index.html
+// http://api.unrealengine.com/INT/API/Runtime/Engine/FCollisionQueryParams/index.html
+// http://api.unrealengine.com/INT/API/Runtime/Engine/GameFramework/APawn/index.html
 
-#include "ShooterGame.h"
 #include "PickupAndRotateActor.h"
 #include "Camera/CameraComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "GameFramework/Character.h"
 
 // Sets default values
-APickupAndRotateActor::APickupAndRotateActor()
+APickupAndRotateActor::APickupAndRotateActor()//(const FObjectInitializer& ObjectInitializer)
+	//: Super(ObjectInitializer)
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
-	//Declare mesh
 	MyMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("My Mesh"));
 	MyMesh->SetSimulatePhysics(true);
 	RootComponent = MyMesh;
-	
-	//Set default variables
+
 	bHolding = false;
 	bGravity = true;
 }
@@ -25,16 +25,15 @@ APickupAndRotateActor::APickupAndRotateActor()
 void APickupAndRotateActor::BeginPlay()
 {
 	Super::BeginPlay();
+	AShooterPlayerController* MyPC = Cast<AShooterPlayerController>(GetWorld()->GetFirstPlayerController());
+	//MyCharacter = UGameplayStatics::GetPlayerCharacter(this, 0);
+	//MyPC = GetWorld()->GetFirstPlayerController();
+	PlayerCamera = MyPC->FindComponentByClass<UCameraComponent>();
 
-	MyCharacter = UGameplayStatics::GetPlayerCharacter(this, 0);
-
-	// Get forward vector to throw the object
-	PlayerCamera = MyCharacter->FindComponentByClass<UCameraComponent>(); 
 	TArray<USceneComponent*> Components;
 
-	MyCharacter->GetComponents(Components);
+	MyPC->GetComponents(Components);
 
-	//Loop through all the components and get the HoldingComponent, which acts as the dummy placement of the object
 	if (Components.Num() > 0)
 	{
 		for (auto& Comp : Components)
@@ -44,19 +43,6 @@ void APickupAndRotateActor::BeginPlay()
 				HoldingComp = Cast<USceneComponent>(Comp);
 			}
 		}
-	}
-
-}
-
-// Called every frame
-void APickupAndRotateActor::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-	// Set loc and rotation if pass conditions
-	if (bHolding && HoldingComp)
-	{
-		SetActorLocationAndRotation(HoldingComp->GetComponentLocation(), HoldingComp->GetComponentRotation());
 	}
 }
 
@@ -70,17 +56,19 @@ void APickupAndRotateActor::Pickup()
 {
 	bHolding = !bHolding;
 	bGravity = !bGravity;
-
-	//toggle gravity, physics, and collision
 	MyMesh->SetEnableGravity(bGravity);
 	MyMesh->SetSimulatePhysics(bHolding ? false : true);
 	MyMesh->SetCollisionEnabled(bHolding ? ECollisionEnabled::NoCollision : ECollisionEnabled::QueryAndPhysics);
+	if (HoldingComp && bHolding)
+	{
+		MyMesh->AttachToComponent(HoldingComp, FAttachmentTransformRules::KeepWorldTransform);
+		SetActorLocation(HoldingComp->GetComponentLocation());
+	}
 
-	// Toss object if not holding anymore
 	if (!bHolding)
 	{
+		MyMesh->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
 		ForwardVector = PlayerCamera->GetForwardVector();
 		MyMesh->AddForce(ForwardVector * 100000 * MyMesh->GetMass());
 	}
-
 }
