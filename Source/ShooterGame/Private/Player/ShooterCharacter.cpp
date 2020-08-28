@@ -9,6 +9,10 @@
 #include "Animation/AnimInstance.h"
 #include "Sound/SoundNodeLocalPlayer.h"
 #include "AudioThread.h"
+//Include drawdebughelpers for hjolding component
+#include "DrawDebugHelpers.h"
+//For FMath::Lerp
+#include "Math/UnrealMathUtility.h"
 
 static int32 NetVisualizeRelevancyTestPoints = 0;
 FAutoConsoleVariableRef CVarNetVisualizeRelevancyTestPoints(
@@ -33,7 +37,15 @@ FOnShooterCharacterUnEquipWeapon AShooterCharacter::NotifyUnEquipWeapon;
 AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer.SetDefaultSubobjectClass<UShooterCharacterMovement>(ACharacter::CharacterMovementComponentName))
 {
+
+	// Create a CameraComponent	
+	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
+	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
+	FirstPersonCameraComponent->SetRelativeLocation(FVector(-39.56f, 1.75f, 64.f)); // Position the camera
+	FirstPersonCameraComponent->bUsePawnControlRotation = true;
+
 	Mesh1P = ObjectInitializer.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("PawnMesh1P"));
+	Mesh1P->SetupAttachment(FirstPersonCameraComponent);
 	Mesh1P->SetupAttachment(GetCapsuleComponent());
 	Mesh1P->bOnlyOwnerSee = true;
 	Mesh1P->bOwnerNoSee = false;
@@ -67,6 +79,17 @@ AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer
 
 	BaseTurnRate = 45.f;
 	BaseLookUpRate = 45.f;
+
+	// Set Holding Component in constructor
+	HoldingComponent = CreateDefaultSubobject<USceneComponent>(TEXT("HoldingComponent")); 
+	HoldingComponent->SetRelativeLocation(FVector(0.0f, 50.0f, 0.0f)); //.X = 50.0f;
+	// Add attachment to the "gun muzzle" of the player
+	HoldingComponent->SetupAttachment(GetMesh());
+
+	CurrentItem = NULL;
+	bCanMove = true;
+	bInspecting = false;
+
 }
 
 void AShooterCharacter::PostInitializeComponents()
@@ -876,6 +899,13 @@ void AShooterCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 	PlayerInputComponent->BindAction("Run", IE_Pressed, this, &AShooterCharacter::OnStartRunning);
 	PlayerInputComponent->BindAction("RunToggle", IE_Pressed, this, &AShooterCharacter::OnStartRunningToggle);
 	PlayerInputComponent->BindAction("Run", IE_Released, this, &AShooterCharacter::OnStopRunning);
+
+	// Bind action event
+	PlayerInputComponent->BindAction("Action", IE_Pressed, this, &AShooterCharacter::OnAction);
+
+	// Bind Inspect event
+	PlayerInputComponent->BindAction("Inspect", IE_Pressed, this, &AShooterCharacter::OnInspect);
+	PlayerInputComponent->BindAction("Inspect", IE_Released, this, &AShooterCharacter::OnInspectReleased);
 }
 
 
@@ -1113,6 +1143,53 @@ void AShooterCharacter::Tick(float DeltaSeconds)
 			DrawDebugSphere(GetWorld(), PointToTest, 10.0f, 8, FColor::Red);
 		}
 	}
+
+	//In the Tick function we will draw a line trace every frame that is 200 unreal units long. If the line trace hits an actor that is a class of PickupAndRotateActor, we will set our CurrentItem variable to that actor. Now, depending on if we are holding an object or not, will determine if we zoom in to inspect an object or to put the object in front of our camera to rotate it. So if the player is not holding an object we will increase the FirstPersonCameraComponent's FieldOfView to 45.0f. We will use Lerp to smoothly transition between 90.f and 45.0f. However, if our player is holding a pickup actor, when the players presses the Inspect button the actor will change locations to be in front of the player. Furthermore we will have to change the PlayerCameraManager's ViewPitchMax and ViewPitchMin values to 179.9000002f and -179.9000002f respectively to have full rotational movement for our actor. Lastly, while the Inpect button is being held we will call the CurrentItem's RotateActor function to set the rotation of the actor. We will player and camera movement later on. Below is the Tick function.
+	Start = FirstPersonCameraComponent->GetComponentLocation();
+	ForwardVector = FirstPersonCameraComponent->GetForwardVector();
+	End = ((ForwardVector * 200.f) + Start);
+
+	DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1, 0, 1);
+
+	if (!bHoldingItem)
+	{
+		if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, DefaultComponentQueryParams, DefaultResponseParam))
+		{
+			if (Hit.GetActor()->GetClass()->IsChildOf(APickupAndRotateActor::StaticClass()))
+			{
+				CurrentItem = Cast<APickupAndRotateActor>(Hit.GetActor());
+			}
+		}
+		else
+		{
+			CurrentItem = NULL;
+		}
+	}
+
+	if (bInspecting)
+	{
+		if (bHoldingItem)
+		{
+			FirstPersonCameraComponent->SetFieldOfView(FMath::Lerp(FirstPersonCameraComponent->FieldOfView, 90.0f, 0.1f));
+			HoldingComponent->SetRelativeLocation(FVector(0.0f, 50.0f, 50.0f));
+			GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMax = 179.9000002f;
+			GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMin = -179.9000002f;
+			CurrentItem->RotateActor();
+		}
+		else
+		{
+			FirstPersonCameraComponent->SetFieldOfView(FMath::Lerp(FirstPersonCameraComponent->FieldOfView, 45.0f, 0.1f));
+		}
+	}
+	else
+	{
+		FirstPersonCameraComponent->SetFieldOfView(FMath::Lerp(FirstPersonCameraComponent->FieldOfView, 90.0f, 0.1f));
+
+		if (bHoldingItem)
+		{
+			HoldingComponent->SetRelativeLocation(FVector(50.0f, 0.0f, 0.f));
+		}
+	}
 }
 
 void AShooterCharacter::BeginDestroy()
@@ -1302,4 +1379,72 @@ void AShooterCharacter::BuildPauseReplicationCheckPoints(TArray<FVector>& Releva
 	RelevancyCheckPoints.Add(FVector(BoundingBox.Max.X, BoundingBox.Max.Y - YDiff, BoundingBox.Max.Z));
 	RelevancyCheckPoints.Add(FVector(BoundingBox.Max.X - XDiff, BoundingBox.Max.Y - YDiff, BoundingBox.Max.Z));
 	RelevancyCheckPoints.Add(BoundingBox.Max);
+}
+
+void AShooterCharacter::BeginPlay()
+{
+	// Call the base class  
+	Super::BeginPlay();
+
+	PitchMax = GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMax;
+	PitchMin = GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMin;
+
+}
+
+void AShooterCharacter::ToggleMovement()
+{
+	bCanMove = !bCanMove;
+	bInspecting = !bInspecting;
+	//FirstPersonCameraComponent->bUsePawnControlRotation = !FirstPersonCameraComponent->bUsePawnControlRotation;
+	bUseControllerRotationYaw = !bUseControllerRotationYaw;
+}
+
+void AShooterCharacter::ToggleItemPickup()
+{
+	if (CurrentItem)
+	{
+		bHoldingItem = !bHoldingItem;
+		CurrentItem->Pickup();
+
+		if (!bHoldingItem)
+		{
+			CurrentItem = NULL;
+		}
+	}
+}
+
+void AShooterCharacter::OnAction()
+{
+	if (CurrentItem && !bInspecting)
+	{
+		ToggleItemPickup();
+	}
+}
+
+void AShooterCharacter::OnInspect()
+{
+	if (bHoldingItem)
+	{
+		LastRotation = GetControlRotation();
+		ToggleMovement();
+	}
+	else
+	{
+		bInspecting = true;
+	}
+}
+
+void AShooterCharacter::OnInspectReleased()
+{
+	if (bInspecting && bHoldingItem)
+	{
+		GetController()->SetControlRotation(LastRotation);
+		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMax = PitchMax;
+		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMin = PitchMin;
+		ToggleMovement();
+	}
+	else
+	{
+		bInspecting = false;
+	}
 }

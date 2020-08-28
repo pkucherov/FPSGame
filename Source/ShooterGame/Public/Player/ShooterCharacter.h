@@ -3,6 +3,8 @@
 #pragma once
 
 #include "ShooterTypes.h"
+// add in the pickup actor class, it needs to be above the character generated include file.
+#include "PickupAndRotateActor.h"
 #include "ShooterCharacter.generated.h"
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnShooterCharacterEquipWeapon, AShooterCharacter*, AShooterWeapon* /* new */);
@@ -19,6 +21,7 @@ class AShooterCharacter : public ACharacter
 	virtual void PostInitializeComponents() override;
 
 	/** Update the character. (Running, health etc). */
+	// We are allowed to override the Tick
 	virtual void Tick(float DeltaSeconds) override;
 
 	/** cleanup inventory */
@@ -193,6 +196,43 @@ class AShooterCharacter : public ACharacter
 
 	/** player released run action */
 	void OnStopRunning();
+
+	//////////////////////////////////////////////////////////////////////////
+	// Holding Component / Barricade ability
+
+	/** First person camera */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class UCameraComponent* FirstPersonCameraComponent;
+
+	/** Holding Component */
+	UPROPERTY(EditAnywhere)
+	class USceneComponent* HoldingComponent;
+
+	UPROPERTY(EditAnywhere)
+	class APickupAndRotateActor* CurrentItem;
+
+	// player abilities
+	bool bCanMove;
+	bool bHoldingItem;
+	bool bInspecting;
+
+	// Set Camera's pitch values
+	float PitchMax;
+	float PitchMin;
+
+	FVector HoldingComp;
+	// Hold player's last rotation so don't lose track of where our player was last looking
+	FRotator LastRotation;
+
+	// Set line trace
+	FVector Start;
+	FVector ForwardVector;
+	FVector End;
+
+	FHitResult Hit;
+
+	FComponentQueryParams DefaultComponentQueryParams;
+	FCollisionResponseParams DefaultResponseParam;
 
 	//////////////////////////////////////////////////////////////////////////
 	// Reading data
@@ -475,9 +515,17 @@ protected:
 	/** Builds list of points to check for pausing replication for a connection*/
 	void BuildPauseReplicationCheckPoints(TArray<FVector>& RelevancyCheckPoints);
 
+
 protected:
 	/** Returns Mesh1P subobject **/
 	FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
+
+	virtual void BeginPlay();
+	void ToggleMovement();
+	void ToggleItemPickup();
+	void OnAction();
+	void OnInspect();
+	void OnInspectReleased();
 };
 
 
