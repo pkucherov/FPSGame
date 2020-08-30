@@ -38,14 +38,8 @@ AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer
 	: Super(ObjectInitializer.SetDefaultSubobjectClass<UShooterCharacterMovement>(ACharacter::CharacterMovementComponentName))
 {
 
-	// Create a CameraComponent	
-	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
-	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
-	FirstPersonCameraComponent->SetRelativeLocation(FVector(-39.56f, 1.75f, 64.f)); // Position the camera
-	FirstPersonCameraComponent->bUsePawnControlRotation = true;
-
 	Mesh1P = ObjectInitializer.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("PawnMesh1P"));
-	Mesh1P->SetupAttachment(FirstPersonCameraComponent);
+	//Mesh1P->SetupAttachment(FirstPersonCameraComponent);
 	Mesh1P->SetupAttachment(GetCapsuleComponent());
 	Mesh1P->bOnlyOwnerSee = true;
 	Mesh1P->bOwnerNoSee = false;
@@ -80,11 +74,20 @@ AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer
 	BaseTurnRate = 45.f;
 	BaseLookUpRate = 45.f;
 
+	// Pick up and Rotate Object initialization code
+	// Create a CameraComponent	
+	//FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
+	//Put camera so the gun appears infront of the camera FPS style
+	//FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
+	//Position the camera, otherwise the camera is below the gun muzzle
+	//FirstPersonCameraComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 50.0f)); 
+	//FirstPersonCameraComponent->bUsePawnControlRotation = true;
+
 	// Set Holding Component in constructor
 	HoldingComponent = CreateDefaultSubobject<USceneComponent>(TEXT("HoldingComponent")); 
 	HoldingComponent->SetRelativeLocation(FVector(0.0f, 50.0f, 0.0f)); //.X = 50.0f;
 	// Add attachment to the "gun muzzle" of the player
-	HoldingComponent->SetupAttachment(GetMesh());
+	HoldingComponent->SetupAttachment(GetCapsuleComponent());
 
 	CurrentItem = NULL;
 	bCanMove = true;
@@ -227,6 +230,23 @@ void AShooterCharacter::UpdateTeamColors(UMaterialInstanceDynamic* UseMID)
 	}
 }
 
+
+/*In first - person mode, the Pawn's mesh is hard-attached to the camera so that the arms always appear relative to the player's view.The downside of this approach is that it means the legs are not visible in the player's view, since the entire mesh rotates to match the camera yaw and pitch.
+
+The basic flow of the camera update is :
+
+AShooterPlayerCameraManager::UpdateCamera() is executed each tick.
+
+APlayerCamera::UpdateCamera() is called to update the camera rotation based on the player's input.
+
+AShooterCharacter::OnCameraUpdate() is called to perform the calculations necessary to rotate the first person mesh to match the camera. MESH IS BEING HARD ATTACHED TO THE CAMERA INSTEAD OF USING THE UCAMERACOMPONENT like other C++ FPS tutorials or Blueprint Camera
+
+When the player dies, it switches to a death camera that has a fixed location and rotation set in the AShooterPlayerController::PawnDied()
+
+This function calls AShooterPlayerController::FindDeathCameraSpot(), which cycles through several different locationsand uses the first one not obstructed by the level's geometry.
+https://answers.unrealengine.com/questions/740413/view.html
+https://docs.unrealengine.com/en-US/Resources/SampleGames/ShooterGame/index.html#playercamera
+*/
 void AShooterCharacter::OnCameraUpdate(const FVector& CameraLocation, const FRotator& CameraRotation)
 {
 	USkeletalMeshComponent* DefMesh1P = Cast<USkeletalMeshComponent>(GetClass()->GetDefaultSubobjectByName(TEXT("PawnMesh1P")));
@@ -244,6 +264,12 @@ void AShooterCharacter::OnCameraUpdate(const FVector& CameraLocation, const FRot
 	const FMatrix PitchedMesh = MeshRelativeToCamera * PitchedCameraLS;
 
 	Mesh1P->SetRelativeLocationAndRotation(PitchedMesh.GetOrigin(), PitchedMesh.Rotator());
+
+	//FVector DefMeshLocation = DefMesh1P->RelativeLocation; 
+	//if (bIsCrouched) { 
+	//	const float CrouchedHeightAdjust = DefaultBaseEyeHeight - BaseEyeHeight; DefMeshLocation -= FVector(0.f, 0.f, CrouchedHeightAdjust); 
+	//} 
+	//const FMatrix DefMeshLS = FRotationTranslationMatrix(DefMesh1P->RelativeRotation, DefMeshLocation);
 }
 
 
@@ -1145,51 +1171,53 @@ void AShooterCharacter::Tick(float DeltaSeconds)
 	}
 
 	//In the Tick function we will draw a line trace every frame that is 200 unreal units long. If the line trace hits an actor that is a class of PickupAndRotateActor, we will set our CurrentItem variable to that actor. Now, depending on if we are holding an object or not, will determine if we zoom in to inspect an object or to put the object in front of our camera to rotate it. So if the player is not holding an object we will increase the FirstPersonCameraComponent's FieldOfView to 45.0f. We will use Lerp to smoothly transition between 90.f and 45.0f. However, if our player is holding a pickup actor, when the players presses the Inspect button the actor will change locations to be in front of the player. Furthermore we will have to change the PlayerCameraManager's ViewPitchMax and ViewPitchMin values to 179.9000002f and -179.9000002f respectively to have full rotational movement for our actor. Lastly, while the Inpect button is being held we will call the CurrentItem's RotateActor function to set the rotation of the actor. We will player and camera movement later on. Below is the Tick function. https://github.com/Harrison1/unrealcpp/tree/master/PickupAndRotateActor
-	Start = FirstPersonCameraComponent->GetComponentLocation();
-	ForwardVector = FirstPersonCameraComponent->GetForwardVector();
-	End = ((ForwardVector * 200.f) + Start);
+	//Start = FirstPersonCameraComponent->GetComponentLocation();
+	//ForwardVector = FirstPersonCameraComponent->GetForwardVector();
+	//End = ((ForwardVector * 200.f) + Start);
 
-	DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1, 0, 1);
+	//DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1, 0, 1);
 
-	if (!bHoldingItem)
-	{
-		if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, DefaultComponentQueryParams, DefaultResponseParam))
-		{
-			if (Hit.GetActor()->GetClass()->IsChildOf(APickupAndRotateActor::StaticClass()))
-			{
-				CurrentItem = Cast<APickupAndRotateActor>(Hit.GetActor());
-			}
-		}
-		else
-		{
-			CurrentItem = NULL;
-		}
-	}
+	//if (!bHoldingItem)
+	//{
+	//	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, DefaultComponentQueryParams, DefaultResponseParam))
+	//	{
+	//		if (Hit.GetActor()->GetClass()->IsChildOf(APickupAndRotateActor::StaticClass()))
+	//		{
+	//			CurrentItem = Cast<APickupAndRotateActor>(Hit.GetActor());
+	//		}
+	//	}
+	//	else
+	//	{
+	//		CurrentItem = NULL;
+	//	}
+	//}
 
-	if (bInspecting)
-	{
-		if (bHoldingItem)
-		{
-			FirstPersonCameraComponent->SetFieldOfView(FMath::Lerp(FirstPersonCameraComponent->FieldOfView, 90.0f, 0.1f));
-			HoldingComponent->SetRelativeLocation(FVector(0.0f, 50.0f, 50.0f));
-			GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMax = 179.9000002f;
-			GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMin = -179.9000002f;
-			CurrentItem->RotateActor();
-		}
-		else
-		{
-			FirstPersonCameraComponent->SetFieldOfView(FMath::Lerp(FirstPersonCameraComponent->FieldOfView, 45.0f, 0.1f));
-		}
-	}
-	else
-	{
-		FirstPersonCameraComponent->SetFieldOfView(FMath::Lerp(FirstPersonCameraComponent->FieldOfView, 90.0f, 0.1f));
+	//if (bInspecting)
+	//{
+	//	if (bHoldingItem)
+	//	{
+	//		//Recenter the holding component in front of Field of View and allow rotation of the holding component when keep pressing the inspecting button
+	//		FirstPersonCameraComponent->SetFieldOfView(FMath::Lerp(FirstPersonCameraComponent->FieldOfView, 90.0f, 0.1f));
+	//		HoldingComponent->SetRelativeLocation(FVector(0.0f, 50.0f, 50.0f));
+	//		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMax = 179.9000002f;
+	//		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMin = -179.9000002f;
+	//		CurrentItem->RotateActor();
+	//	}
+	//	else
+	//	{
+	//		//Zoom in when inspecting
+	//		FirstPersonCameraComponent->SetFieldOfView(FMath::Lerp(FirstPersonCameraComponent->FieldOfView, 45.0f, 0.1f));
+	//	}
+	//}
+	//else
+	//{
+	//	//FirstPersonCameraComponent->SetFieldOfView(FMath::Lerp(FirstPersonCameraComponent->FieldOfView, 90.0f, 0.1f));
 
-		if (bHoldingItem)
-		{
-			HoldingComponent->SetRelativeLocation(FVector(50.0f, 0.0f, 0.f));
-		}
-	}
+	//	if (bHoldingItem)
+	//	{
+	//		HoldingComponent->SetRelativeLocation(FVector(50.0f, 0.0f, 0.f));
+	//	}
+	//}
 }
 
 void AShooterCharacter::BeginDestroy()
@@ -1386,8 +1414,8 @@ void AShooterCharacter::BeginPlay()
 	// Call the base class  
 	Super::BeginPlay();
 
-	PitchMax = GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMax;
-	PitchMin = GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMin;
+	//PitchMax = GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMax;
+	//PitchMin = GetWorld()->GetFirstPlayerController()->PlayerCameraManager->ViewPitchMin;
 
 }
 
@@ -1403,6 +1431,7 @@ void AShooterCharacter::ToggleItemPickup()
 {
 	if (CurrentItem)
 	{
+		//Pick up current item
 		bHoldingItem = !bHoldingItem;
 		CurrentItem->Pickup();
 

@@ -8,6 +8,7 @@
 #include "Camera/CameraComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/PlayerController.h"
 
 // Sets default values
 APickupAndRotateActor::APickupAndRotateActor()//(const FObjectInitializer& ObjectInitializer)
@@ -28,6 +29,10 @@ void APickupAndRotateActor::BeginPlay()
 	AShooterPlayerController* MyPC = Cast<AShooterPlayerController>(GetWorld()->GetFirstPlayerController());
 	//MyCharacter = UGameplayStatics::GetPlayerCharacter(this, 0);
 	//MyPC = GetWorld()->GetFirstPlayerController();
+	
+	//AShooterCharacter* MyPawn = Cast<AShooterCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn());
+
+	//Crashes when try to get Pawn and Character from FirstPlayController
 	PlayerCamera = MyPC->FindComponentByClass<UCameraComponent>();
 
 	TArray<USceneComponent*> Components;
@@ -54,8 +59,8 @@ void APickupAndRotateActor::RotateActor()
 
 void APickupAndRotateActor::Pickup()
 {
-	bHolding = !bHolding;
-	bGravity = !bGravity;
+	bHolding = !bHolding; //yes holding upon pickup
+	bGravity = !bGravity; //no gravity upon pickup
 	MyMesh->SetEnableGravity(bGravity);
 	MyMesh->SetSimulatePhysics(bHolding ? false : true);
 	MyMesh->SetCollisionEnabled(bHolding ? ECollisionEnabled::NoCollision : ECollisionEnabled::QueryAndPhysics);
@@ -65,6 +70,7 @@ void APickupAndRotateActor::Pickup()
 		SetActorLocation(HoldingComp->GetComponentLocation());
 	}
 
+	// Throw and toss the actor (e.g. barricade) upon user input!
 	if (!bHolding)
 	{
 		MyMesh->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);

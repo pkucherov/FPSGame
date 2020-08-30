@@ -23,16 +23,16 @@ protected:
 
 public:
 	UPROPERTY(EditAnywhere)
-		UStaticMeshComponent* MyMesh;
+	UStaticMeshComponent* MyMesh;
 
 	UPROPERTY(EditAnywhere)
-		USceneComponent* HoldingComp;
+	USceneComponent* HoldingComp;
 
 	UFUNCTION()
-		void RotateActor();
+	void RotateActor();
 
 	UFUNCTION()
-		void Pickup();
+	void Pickup();
 
 	bool bHolding;
 	bool bGravity;
