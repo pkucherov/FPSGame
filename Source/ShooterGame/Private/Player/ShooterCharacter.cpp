@@ -265,6 +265,7 @@ void AShooterCharacter::OnCameraUpdate(const FVector& CameraLocation, const FRot
 
 	Mesh1P->SetRelativeLocationAndRotation(PitchedMesh.GetOrigin(), PitchedMesh.Rotator());
 
+	//the Mesh1P doesn't move vertically correctly to match the player's crouch height?
 	//FVector DefMeshLocation = DefMesh1P->RelativeLocation; 
 	//if (bIsCrouched) { 
 	//	const float CrouchedHeightAdjust = DefaultBaseEyeHeight - BaseEyeHeight; DefMeshLocation -= FVector(0.f, 0.f, CrouchedHeightAdjust); 
