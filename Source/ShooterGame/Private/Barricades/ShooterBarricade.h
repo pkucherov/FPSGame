@@ -1,7 +1,9 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
 #include "ShooterBarricade.generated.h"
 
 // Base class for Barricade objects that can be placed in the world
@@ -10,8 +12,8 @@ class AShooterBarricade : public AActor
 {
 	GENERATED_UCLASS_BODY()
 
-	/** Barricade on touch */
-	virtual void NotifyActorBeginOverlap(class AActor* Other) override;
+		/** Barricade on touch */
+		virtual void NotifyActorBeginOverlap(class AActor* Other) override;
 
 	/** check if pawn can use this Barricade */
 	virtual bool CanBePickedUp(class AShooterCharacter* TestPawn) const;
@@ -22,43 +24,43 @@ protected:
 
 private:
 	/** FX component */
-	UPROPERTY(VisibleDefaultsOnly, Category=Effects)
-	UParticleSystemComponent* BarricadePSC;
+	UPROPERTY(VisibleDefaultsOnly, Category = Effects)
+		UParticleSystemComponent* BarricadePSC;
 
 protected:
 	/** FX of active Barricade */
-	UPROPERTY(EditDefaultsOnly, Category=Effects)
-	UParticleSystem* ActiveFX;
+	UPROPERTY(EditDefaultsOnly, Category = Effects)
+		UParticleSystem* ActiveFX;
 
 	/** FX of Barricade on respawn timer */
-	UPROPERTY(EditDefaultsOnly, Category=Effects)
-	UParticleSystem* RespawningFX;
+	UPROPERTY(EditDefaultsOnly, Category = Effects)
+		UParticleSystem* RespawningFX;
 
 	/** sound played when player picks it up */
-	UPROPERTY(EditDefaultsOnly, Category=Effects)
-	USoundCue* BarricadeSound;
+	UPROPERTY(EditDefaultsOnly, Category = Effects)
+		USoundCue* BarricadeSound;
 
 	/** sound played on respawn */
-	UPROPERTY(EditDefaultsOnly, Category=Effects)
-	USoundCue* RespawnSound;
+	UPROPERTY(EditDefaultsOnly, Category = Effects)
+		USoundCue* RespawnSound;
 
 	/** how long it takes to respawn? */
-	UPROPERTY(EditDefaultsOnly, Category=Barricade)
-	float RespawnTime;
+	UPROPERTY(EditDefaultsOnly, Category = Barricade)
+		float RespawnTime;
 
 	/** is it ready for interactions? */
-	UPROPERTY(Transient, ReplicatedUsing=OnRep_IsActive)
-	uint32 bIsActive:1;
+	UPROPERTY(Transient, ReplicatedUsing = OnRep_IsActive)
+		uint32 bIsActive : 1;
 
 	/* The character who has picked up this Barricade */
 	UPROPERTY(Transient, Replicated)
-	AShooterCharacter* PickedUpBy;
+		AShooterCharacter* PickedUpBy;
 
 	/** Handle for efficient management of RespawnBarricade timer */
 	FTimerHandle TimerHandle_RespawnBarricade;
 
 	UFUNCTION()
-	void OnRep_IsActive();
+		void OnRep_IsActive();
 
 	/** give Barricade */
 	virtual void GiveBarricadeTo(class AShooterCharacter* Pawn);
@@ -77,11 +79,11 @@ protected:
 
 	/** blueprint event: Barricade disappears */
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnPickedUpEvent();
+		void OnPickedUpEvent();
 
 	/** blueprint event: Barricade appears */
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnRespawnEvent();
+		void OnRespawnEvent();
 
 protected:
 	/** Returns BarricadePSC subobject **/

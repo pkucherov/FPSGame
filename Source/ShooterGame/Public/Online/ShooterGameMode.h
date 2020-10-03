@@ -9,6 +9,7 @@
 class AShooterAIController;
 class AShooterPlayerState;
 class AShooterPickup;
+class AShooterBarricade;
 class FUniqueNetId;
 
 UCLASS(config=Game)
@@ -158,5 +159,8 @@ public:
 
 	UPROPERTY()
 	TArray<AShooterPickup*> LevelPickups;
+
+	UPROPERTY()
+	TArray<AShooterBarricade*> LevelBarricades;
 
 };
