@@ -3,9 +3,3 @@ D:\Build\++UE4\Sync\Samples\Games\ShooterGame\Binaries\DotNET\AutomationScripts\
 D:\Build\++UE4\Sync\Samples\Games\ShooterGame\Build\Scripts\obj\Development\ShooterGame.Automation.csprojAssemblyReference.cache
 D:\Build\++UE4\Sync\Samples\Games\ShooterGame\Build\Scripts\obj\Development\ShooterGame.Automation.dll
 D:\Build\++UE4\Sync\Samples\Games\ShooterGame\Build\Scripts\obj\Development\ShooterGame.Automation.pdb
-C:\Users\edwin\Documents\Unreal Projects\FPSGame\Binaries\DotNET\AutomationScripts\ShooterGame.Automation.dll
-C:\Users\edwin\Documents\Unreal Projects\FPSGame\Binaries\DotNET\AutomationScripts\ShooterGame.Automation.pdb
-C:\Users\edwin\Documents\Unreal Projects\FPSGame\Build\Scripts\obj\Development\ShooterGame.Automation.csprojAssemblyReference.cache
-C:\Users\edwin\Documents\Unreal Projects\FPSGame\Build\Scripts\obj\Development\ShooterGame.Automation.csproj.CoreCompileInputs.cache
-C:\Users\edwin\Documents\Unreal Projects\FPSGame\Build\Scripts\obj\Development\ShooterGame.Automation.dll
-C:\Users\edwin\Documents\Unreal Projects\FPSGame\Build\Scripts\obj\Development\ShooterGame.Automation.pdb
