@@ -2,8 +2,6 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
 #include "ShooterBarricade.h"
 #include "ShooterBarricade_Environment.generated.h"
 
@@ -16,14 +14,14 @@ class AShooterBarricade_Health : public AShooterBarricade
 {
 	GENERATED_UCLASS_BODY()
 
-		/** check if pawn can use this Barricade */
-		virtual bool CanBePickedUp(AShooterCharacter* TestPawn) const override;
+	/** check if pawn can use this Barricade */
+	virtual bool CanBePickedUp(AShooterCharacter* TestPawn) const override;
 
 protected:
 
 	/** how much health does it give? */
 	UPROPERTY(EditDefaultsOnly, Category = Barricade)
-		int32 Health;
+	int32 Health;
 
 	/** give Barricade */
 	virtual void GiveBarricadeTo(AShooterCharacter* Pawn) override;

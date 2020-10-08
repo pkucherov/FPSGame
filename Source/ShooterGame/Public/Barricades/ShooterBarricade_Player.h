@@ -2,8 +2,6 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
 #include "ShooterBarricade.h"
 #include "ShooterBarricade_Player.generated.h"
 
@@ -17,8 +15,8 @@ class AShooterBarricade_Ammo : public AShooterBarricade
 {
 	GENERATED_UCLASS_BODY()
 
-		/** check if pawn can use this Barricade */
-		virtual bool CanBePickedUp(AShooterCharacter* TestPawn) const override;
+	/** check if pawn can use this Barricade */
+	virtual bool CanBePickedUp(AShooterCharacter* TestPawn) const override;
 
 	bool IsForWeapon(UClass* WeaponClass);
 

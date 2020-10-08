@@ -2,8 +2,6 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
 #include "ShooterBarricade.generated.h"
 
 // Base class for Barricade objects that can be placed in the world

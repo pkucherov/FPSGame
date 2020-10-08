@@ -43,8 +43,7 @@ int32 AShooterGame_TeamAssimilation::ChooseTeam(AShooterPlayerState* ForPlayerSt
 	TArray<int32> TeamBalance;
 	TeamBalance.AddZeroed(NumTeams);
 
-	// get current team balance
-	for (int32 i = 0; i < GameState->PlayerArray.Num(); i++)
+	for (int32 i = 0; i < GameState->PlayerArray.Num(); i++) 
 	{
 		AShooterPlayerState const* const TestPlayerState = Cast<AShooterPlayerState>(GameState->PlayerArray[i]);
 		if (TestPlayerState && TestPlayerState != ForPlayerState && TeamBalance.IsValidIndex(TestPlayerState->GetTeamNum()))
@@ -53,29 +52,41 @@ int32 AShooterGame_TeamAssimilation::ChooseTeam(AShooterPlayerState* ForPlayerSt
 		}
 	}
 
+	// 27 survivors vs 3
+	//Team 0 are Survivors
+	//Team 1 is the Collective
+	// get current team balance
 	// find least populated one
-	int32 BestTeamScore = TeamBalance[0];
-	for (int32 i = 1; i < TeamBalance.Num(); i++)
+	int32 SurvivorScore = TeamBalance[0];
+	int32 CollectiveScore = TeamBalance[1];
+	if (CollectiveScore < 3)
 	{
-		if (BestTeamScore > TeamBalance[i])
-		{
-			BestTeamScore = TeamBalance[i];
-		}
+		return 1;
 	}
 
-	// there could be more than one...
-	TArray<int32> BestTeams;
-	for (int32 i = 0; i < TeamBalance.Num(); i++)
-	{
-		if (TeamBalance[i] == BestTeamScore)
-		{
-			BestTeams.Add(i);
-		}
-	}
+	return 0;
 
-	// get random from best list
-	const int32 RandomBestTeam = BestTeams[FMath::RandHelper(BestTeams.Num())];
-	return RandomBestTeam;
+	//for (int32 i = 1; i < TeamBalance.Num(); i++)
+	//{
+	//	if (BestTeamScore > TeamBalance[i])
+	//	{
+	//		BestTeamScore = TeamBalance[i];
+	//	}
+	//}
+
+	//// there could be more than one...
+	//TArray<int32> BestTeams;
+	//for (int32 i = 0; i < TeamBalance.Num(); i++)
+	//{
+	//	if (TeamBalance[i] == BestTeamScore)
+	//	{
+	//		BestTeams.Add(i);
+	//	}
+	//}
+
+	//// get random from best list
+	//const int32 RandomBestTeam = BestTeams[FMath::RandHelper(BestTeams.Num())];
+	//return RandomBestTeam;
 }
 
 void AShooterGame_TeamAssimilation::DetermineMatchWinner()

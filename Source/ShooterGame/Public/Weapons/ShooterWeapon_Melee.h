@@ -66,11 +66,14 @@ struct FMeleeWeaponData
 	/** defaults */
 	FMeleeWeaponData()
 	{
-		WeaponSpread = 5.0f;
-		TargetingSpreadMod = 0.25f;
-		FiringSpreadIncrement = 1.0f;
-		FiringSpreadMax = 10.0f;
-		WeaponRange = 10000.0f;
+		// No spread for melee weapons
+		WeaponSpread = 0.0f;
+		// No targeting for melee weapons
+		TargetingSpreadMod = 0.0f;
+		// No firing spread for melee weapons
+		FiringSpreadIncrement = 0.0f;
+		FiringSpreadMax = 0.0f;
+		WeaponRange = 10.0f;
 		HitDamage = 10;
 		DamageType = UDamageType::StaticClass();
 		ClientSideHitLeeway = 200.0f;
