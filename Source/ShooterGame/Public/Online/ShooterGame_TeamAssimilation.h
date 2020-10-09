@@ -29,7 +29,10 @@ protected:
 	/** best team */
 	int32 WinnerTeam;
 
-	/** pick team with least players in or random when it's equal */
+	/** pick asymmetric team to staff first before larger group  */
+	int32 CheckTeamBalance(AShooterPlayerState* ForPlayerState) const;
+
+	/** switch to asymmetric team after death  */
 	int32 ChooseTeam(AShooterPlayerState* ForPlayerState) const;
 
 	/** check who won */

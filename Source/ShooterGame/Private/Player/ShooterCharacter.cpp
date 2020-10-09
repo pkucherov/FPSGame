@@ -326,6 +326,16 @@ bool AShooterCharacter::Die(float KillingDamage, FDamageEvent const& DamageEvent
 	GetCharacterMovement()->ForceReplicationUpdate();
 
 	OnDeath(KillingDamage, DamageEvent, Killer ? Killer->GetPawn() : NULL, DamageCauser);
+
+	// RESPAWN: Upon Death, set team of player for the asymmetric team
+	AShooterPlayerState* MyPlayerState = Cast<AShooterPlayerState>(GetPlayerState());
+	if (MyPlayerState != NULL)
+	{
+		int32 PreviousTeam = MyPlayerState->GetTeamNum();
+		MyPlayerState->SetTeamNum(1);
+		FString::Printf(TEXT("Previous Team %d changed to: %d"), PreviousTeam, MyPlayerState->GetTeamNum());
+	}
+
 	return true;
 }
 

@@ -16,7 +16,7 @@ void AShooterGame_TeamAssimilation::PostLogin(APlayerController* NewPlayer)
 {
 	// Place player on a team before Super (VoIP team based init, findplayerstart, etc)
 	AShooterPlayerState* NewPlayerState = CastChecked<AShooterPlayerState>(NewPlayer->PlayerState);
-	const int32 TeamNum = ChooseTeam(NewPlayerState);
+	const int32 TeamNum = CheckTeamBalance(NewPlayerState);
 	NewPlayerState->SetTeamNum(TeamNum);
 
 	Super::PostLogin(NewPlayer);
@@ -38,25 +38,27 @@ bool AShooterGame_TeamAssimilation::CanDealDamage(AShooterPlayerState* DamageIns
 	return DamageInstigator && DamagedPlayer && (DamagedPlayer == DamageInstigator || DamagedPlayer->GetTeamNum() != DamageInstigator->GetTeamNum());
 }
 
-int32 AShooterGame_TeamAssimilation::ChooseTeam(AShooterPlayerState* ForPlayerState) const
+int32 AShooterGame_TeamAssimilation::CheckTeamBalance(AShooterPlayerState* ForPlayerState) const
 {
+	// get current team balance
 	TArray<int32> TeamBalance;
 	TeamBalance.AddZeroed(NumTeams);
 
 	for (int32 i = 0; i < GameState->PlayerArray.Num(); i++) 
 	{
 		AShooterPlayerState const* const TestPlayerState = Cast<AShooterPlayerState>(GameState->PlayerArray[i]);
-		if (TestPlayerState && TestPlayerState != ForPlayerState && TeamBalance.IsValidIndex(TestPlayerState->GetTeamNum()))
+
+		//Check number of deaths because of new players joining during the middle of the game
+		//TODO: prevent players from joining in the middle of the game and allow 3 at the beginning only?
+		if (TestPlayerState && TestPlayerState != ForPlayerState && TeamBalance.IsValidIndex(TestPlayerState->GetTeamNum()) && TestPlayerState->GetDeaths()==0)
 		{
 			TeamBalance[TestPlayerState->GetTeamNum()]++;
 		}
 	}
 
-	// 27 survivors vs 3
+	// 27 survivors vs 3 at the beginning
 	//Team 0 are Survivors
 	//Team 1 is the Collective
-	// get current team balance
-	// find least populated one
 	int32 SurvivorScore = TeamBalance[0];
 	int32 CollectiveScore = TeamBalance[1];
 	if (CollectiveScore < 3)
@@ -65,28 +67,13 @@ int32 AShooterGame_TeamAssimilation::ChooseTeam(AShooterPlayerState* ForPlayerSt
 	}
 
 	return 0;
+}
 
-	//for (int32 i = 1; i < TeamBalance.Num(); i++)
-	//{
-	//	if (BestTeamScore > TeamBalance[i])
-	//	{
-	//		BestTeamScore = TeamBalance[i];
-	//	}
-	//}
-
-	//// there could be more than one...
-	//TArray<int32> BestTeams;
-	//for (int32 i = 0; i < TeamBalance.Num(); i++)
-	//{
-	//	if (TeamBalance[i] == BestTeamScore)
-	//	{
-	//		BestTeams.Add(i);
-	//	}
-	//}
-
-	//// get random from best list
-	//const int32 RandomBestTeam = BestTeams[FMath::RandHelper(BestTeams.Num())];
-	//return RandomBestTeam;
+int32 AShooterGame_TeamAssimilation::ChooseTeam(AShooterPlayerState* ForPlayerState) const
+{
+	//Team 0 are Survivors
+	//Team 1 is the Collective
+	return 1;
 }
 
 void AShooterGame_TeamAssimilation::DetermineMatchWinner()
@@ -138,7 +125,7 @@ bool AShooterGame_TeamAssimilation::IsSpawnpointAllowed(APlayerStart* SpawnPoint
 void AShooterGame_TeamAssimilation::InitBot(AShooterAIController* AIC, int32 BotNum)
 {	
 	AShooterPlayerState* BotPlayerState = CastChecked<AShooterPlayerState>(AIC->PlayerState);
-	const int32 TeamNum = ChooseTeam(BotPlayerState);
+	const int32 TeamNum = CheckTeamBalance(BotPlayerState);
 	BotPlayerState->SetTeamNum(TeamNum);		
 
 	Super::InitBot(AIC, BotNum);
