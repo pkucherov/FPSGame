@@ -101,6 +101,7 @@ class AShooterWeapon : public AActor
 	enum class EAmmoType
 	{
 		EBullet,
+		EBarricade, 
 		ERocket,
 		EMax,
 	};

@@ -160,7 +160,4 @@ public:
 	UPROPERTY()
 	TArray<AShooterPickup*> LevelPickups;
 
-	UPROPERTY()
-	TArray<AShooterBarricade*> LevelBarricades;
-
 };

@@ -63,7 +63,7 @@ struct FInstantWeaponData
 	UPROPERTY(EditDefaultsOnly, Category=HitVerification)
 	float AllowedViewDotHitDir;
 
-	/** defaults */
+	/** defaults. No Weapon Spread, TargetSpreadMod, and low Weapon Range for melee weapons*/
 	FInstantWeaponData()
 	{
 		WeaponSpread = 5.0f;
