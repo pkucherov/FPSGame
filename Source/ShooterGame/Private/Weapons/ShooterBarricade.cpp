@@ -69,7 +69,7 @@ void AShooterBarricade::OnImpact(const FHitResult& HitResult)
 	if (GetLocalRole() == ROLE_Authority && !bExploded)
 	{
 		Explode(HitResult);
-		DisableAndDestroy();
+		Disable();
 	}
 }
 
@@ -80,14 +80,16 @@ void AShooterBarricade::Explode(const FHitResult& Impact)
 		ParticleComp->Deactivate();
 	}
 
-	// effects and damage origin shouldn't be placed inside mesh at impact point
+	//// effects and damage origin shouldn't be placed inside mesh at impact point
 	const FVector NudgedImpactLocation = Impact.ImpactPoint + Impact.ImpactNormal * 10.0f;
 
-	if (WeaponConfig.ExplosionDamage > 0 && WeaponConfig.ExplosionRadius > 0 && WeaponConfig.DamageType)
-	{
-		UGameplayStatics::ApplyRadialDamage(this, WeaponConfig.ExplosionDamage, NudgedImpactLocation, WeaponConfig.ExplosionRadius, WeaponConfig.DamageType, TArray<AActor*>(), this, MyController.Get());
-	}
+	//if (WeaponConfig.ExplosionDamage > 0 && WeaponConfig.ExplosionRadius > 0 && WeaponConfig.DamageType)
+	//{
+	//	UGameplayStatics::ApplyRadialDamage(this, WeaponConfig.ExplosionDamage, NudgedImpactLocation, WeaponConfig.ExplosionRadius, WeaponConfig.DamageType, TArray<AActor*>(), this, MyController.Get());
+	//}
 
+
+	//Play FX upon placement of Barricade
 	if (ExplosionTemplate)
 	{
 		FTransform const SpawnTransform(Impact.ImpactNormal.Rotation(), NudgedImpactLocation);
@@ -102,7 +104,7 @@ void AShooterBarricade::Explode(const FHitResult& Impact)
 	bExploded = true;
 }
 
-void AShooterBarricade::DisableAndDestroy()
+void AShooterBarricade::Disable()
 {
 	UAudioComponent* ProjAudioComp = FindComponentByClass<UAudioComponent>();
 	if (ProjAudioComp && ProjAudioComp->IsPlaying())
@@ -113,28 +115,133 @@ void AShooterBarricade::DisableAndDestroy()
 	MovementComp->StopMovementImmediately();
 
 	// give clients some time to show explosion
-	SetLifeSpan(2.0f);
+	// SetLifeSpan(2.0f);
 }
 
 ///CODE_SNIPPET_START: AActor::GetActorLocation AActor::GetActorRotation
 void AShooterBarricade::OnRep_Exploded()
 {
-	FVector ProjDirection = GetActorForwardVector();
+	//FVector ProjDirection = GetActorForwardVector();
 
-	const FVector StartTrace = GetActorLocation() - ProjDirection * 200;
-	const FVector EndTrace = GetActorLocation() + ProjDirection * 150;
-	FHitResult Impact;
+	//const FVector StartTrace = GetActorLocation() - ProjDirection * 200;
+	//const FVector EndTrace = GetActorLocation() + ProjDirection * 150;
+	//FHitResult Impact;
 
-	if (!GetWorld()->LineTraceSingleByChannel(Impact, StartTrace, EndTrace, COLLISION_PROJECTILE, FCollisionQueryParams(SCENE_QUERY_STAT(ProjClient), true, GetInstigator())))
-	{
-		// failsafe
-		Impact.ImpactPoint = GetActorLocation();
-		Impact.ImpactNormal = -ProjDirection;
-	}
+	//if (!GetWorld()->LineTraceSingleByChannel(Impact, StartTrace, EndTrace, COLLISION_PROJECTILE, FCollisionQueryParams(SCENE_QUERY_STAT(ProjClient), true, GetInstigator())))
+	//{
+	//	// failsafe
+	//	Impact.ImpactPoint = GetActorLocation();
+	//	Impact.ImpactNormal = -ProjDirection;
+	//}
 
-	Explode(Impact);
+	//Explode(Impact);
 }
 ///CODE_SNIPPET_END
+
+bool AShooterBarricade::Die(float KillingDamage, FDamageEvent const& DamageEvent, AController* Killer, AActor* DamageCauser)
+{
+	if (!CanDie(KillingDamage, DamageEvent, Killer, DamageCauser))
+	{
+		return false;
+	}
+
+	Health = FMath::Min(0.0f, Health);
+
+	// if this is an environmental death then refer to the previous killer so that they receive credit (knocked into lava pits, etc)
+	UDamageType const* const DamageType = DamageEvent.DamageTypeClass ? DamageEvent.DamageTypeClass->GetDefaultObject<UDamageType>() : GetDefault<UDamageType>();
+	Killer = GetDamageInstigator(Killer, *DamageType);
+
+	/*AController* const KilledPlayer = (Controller != NULL) ? Controller : Cast<AController>(GetOwner());
+	GetWorld()->GetAuthGameMode<AShooterGameMode>()->Killed(Killer, KilledPlayer, this, DamageType);*/
+
+	NetUpdateFrequency = GetDefault<AShooterBarricade>()->NetUpdateFrequency;
+	//GetCharacterMovement()->ForceReplicationUpdate();
+
+	OnDeath(KillingDamage, DamageEvent, Killer ? Killer->GetPawn() : NULL, DamageCauser);
+
+	return true;
+}
+
+void AShooterBarricade::PlayHit(float DamageTaken, struct FDamageEvent const& DamageEvent, class APawn* PawnInstigator, class AActor* DamageCauser)
+{
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		ReplicateHit(DamageTaken, DamageEvent, PawnInstigator, DamageCauser, false);
+
+		// play the force feedback effect on the client player controller
+		AShooterPlayerController* PC = Cast<AShooterPlayerController>(Controller);
+		if (PC && DamageEvent.DamageTypeClass)
+		{
+			UShooterDamageType* DamageType = Cast<UShooterDamageType>(DamageEvent.DamageTypeClass->GetDefaultObject());
+			if (DamageType && DamageType->HitForceFeedback && PC->IsVibrationEnabled())
+			{
+				FForceFeedbackParameters FFParams;
+				FFParams.Tag = "Damage";
+				PC->ClientPlayForceFeedback(DamageType->HitForceFeedback, FFParams);
+			}
+		}
+	}
+
+	if (DamageTaken > 0.f)
+	{
+		ApplyDamageMomentum(DamageTaken, DamageEvent, PawnInstigator, DamageCauser);
+	}
+
+	AShooterPlayerController* MyPC = Cast<AShooterPlayerController>(Controller);
+	AShooterHUD* MyHUD = MyPC ? Cast<AShooterHUD>(MyPC->GetHUD()) : NULL;
+	if (MyHUD)
+	{
+		MyHUD->NotifyWeaponHit(DamageTaken, DamageEvent, PawnInstigator);
+	}
+
+	if (PawnInstigator && PawnInstigator != this && PawnInstigator->IsLocallyControlled())
+	{
+		AShooterPlayerController* InstigatorPC = Cast<AShooterPlayerController>(PawnInstigator->Controller);
+		AShooterHUD* InstigatorHUD = InstigatorPC ? Cast<AShooterHUD>(InstigatorPC->GetHUD()) : NULL;
+		if (InstigatorHUD)
+		{
+			InstigatorHUD->NotifyEnemyHit();
+		}
+	}
+}
+
+float AShooterBarricade::TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser)
+{
+	AShooterPlayerController* MyPC = Cast<AShooterPlayerController>(Controller);
+	if (MyPC && MyPC->HasGodMode())
+	{
+		return 0.f;
+	}
+
+	if (Health <= 0.f)
+	{
+		return 0.f;
+	}
+
+	// Modify based on game rules.
+	AShooterGameMode* const Game = GetWorld()->GetAuthGameMode<AShooterGameMode>();
+	Damage = Game ? Game->ModifyDamage(Damage, this, DamageEvent, EventInstigator, DamageCauser) : 0.f;
+
+	const float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+	if (ActualDamage > 0.f)
+	{
+		Health -= ActualDamage;
+		if (Health <= 0)
+		{
+			Die(ActualDamage, DamageEvent, EventInstigator, DamageCauser);
+		}
+		else
+		{
+			PlayHit(ActualDamage, DamageEvent, EventInstigator ? EventInstigator->GetPawn() : NULL, DamageCauser);
+		}
+
+		MakeNoise(1.0f, EventInstigator ? EventInstigator->GetPawn() : this);
+	}
+
+	return ActualDamage;
+}
+
+
 
 void AShooterBarricade::PostNetReceiveVelocity(const FVector& NewVelocity)
 {
