@@ -15,9 +15,16 @@ class AShooterBarricade : public AActor
 {
 	GENERATED_UCLASS_BODY()
 
-		/** initial setup */
-		virtual void PostInitializeComponents() override;
-	
+	/** initial setup */
+	virtual void PostInitializeComponents() override;
+
+	/** setup velocity */
+	void InitVelocity(FVector& ShootDirection);
+
+	/** handle hit */
+	UFUNCTION()
+	void OnImpact(const FHitResult& HitResult);
+
 	// Current health of the Pawn
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = Health)
 	float Health;
@@ -41,12 +48,7 @@ class AShooterBarricade : public AActor
 	*/
 	virtual bool Die(float KillingDamage, struct FDamageEvent const& DamageEvent, class AController* Killer, class AActor* DamageCauser);
 
-	/** setup velocity */
-	void InitVelocity(FVector& ShootDirection);
 
-	/** handle hit */
-	UFUNCTION()
-		void OnImpact(const FHitResult& HitResult);
 
 private:
 	/** movement component */
@@ -63,7 +65,7 @@ protected:
 
 	/** effects for explosion */
 	UPROPERTY(EditDefaultsOnly, Category = Effects)
-		TSubclassOf<class AShooterExplosionEffect> ExplosionTemplate;
+	TSubclassOf<class AShooterExplosionEffect> ExplosionTemplate;
 
 	/** controller that fired me (cache for damage calculations) */
 	TWeakObjectPtr<AController> MyController;
@@ -73,11 +75,11 @@ protected:
 
 	/** did it explode? */
 	UPROPERTY(Transient, ReplicatedUsing = OnRep_Exploded)
-		bool bExploded;
+	bool bExploded;
 
 	/** [client] explosion happened */
 	UFUNCTION()
-		void OnRep_Exploded();
+	void OnRep_Exploded();
 
 	/** trigger explosion */
 	void Explode(const FHitResult& Impact);

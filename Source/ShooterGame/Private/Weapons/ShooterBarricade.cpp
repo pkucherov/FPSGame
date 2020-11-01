@@ -115,7 +115,7 @@ void AShooterBarricade::Disable()
 	MovementComp->StopMovementImmediately();
 
 	// give clients some time to show explosion
-	// SetLifeSpan(2.0f);
+	SetLifeSpan(2.0f);
 }
 
 ///CODE_SNIPPET_START: AActor::GetActorLocation AActor::GetActorRotation
