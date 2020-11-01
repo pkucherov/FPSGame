@@ -29,7 +29,7 @@ class AShooterBarricade : public AActor
 	virtual void KilledBy(class APawn* EventInstigator);
 
 	/** Returns True if the pawn can die in the current state */
-	virtual bool CanDie(float KillingDamage, FDamageEvent const& DamageEvent, AController* Killer, AActor* DamageCauser) const;
+	//virtual bool CanDie(float KillingDamage, FDamageEvent const& DamageEvent, AController* Killer, AActor* DamageCauser) const;
 
 	/**
 	* Kills pawn.  Server/authority only.
