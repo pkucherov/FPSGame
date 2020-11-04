@@ -138,6 +138,19 @@ void AShooterBarricade::OnRep_Exploded()
 }
 ///CODE_SNIPPET_END
 
+bool AShooterBarricade::CanDie(float KillingDamage, FDamageEvent const& DamageEvent, AController* Killer, AActor* DamageCauser) const
+{
+	if (bIsDying										// already dying
+		|| IsPendingKill()								// already destroyed
+		|| GetLocalRole() != ROLE_Authority				// not authority
+		|| GetWorld()->GetAuthGameMode<AShooterGameMode>() == NULL
+		|| GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetMatchState() == MatchState::LeavingMap)	// level transition occurring
+	{
+		return false;
+	}
+
+	return true;
+}
 
 bool AShooterBarricade::Die(float KillingDamage, FDamageEvent const& DamageEvent, AController* Killer, AActor* DamageCauser)
 {
@@ -177,11 +190,40 @@ void AShooterBarricade::KilledBy(APawn* EventInstigator)
 		Die(Health, FDamageEvent(UDamageType::StaticClass()), Killer, NULL);
 	} */
 }
+
+void AShooterBarricade::ReplicateHit(float Damage, struct FDamageEvent const& DamageEvent, class APawn* PawnInstigator, class AActor* DamageCauser, bool bKilled)
+{
+	const float TimeoutTime = GetWorld()->GetTimeSeconds() + 0.5f;
+
+	FDamageEvent const& LastDamageEvent = LastTakeHitInfo.GetDamageEvent();
+	if ((PawnInstigator == LastTakeHitInfo.PawnInstigator.Get()) && (LastDamageEvent.DamageTypeClass == LastTakeHitInfo.DamageTypeClass) && (LastTakeHitTimeTimeout == TimeoutTime))
+	{
+		// same frame damage
+		if (bKilled && LastTakeHitInfo.bKilled)
+		{
+			// Redundant death take hit, just ignore it
+			return;
+		}
+
+		// otherwise, accumulate damage done this frame
+		Damage += LastTakeHitInfo.ActualDamage;
+	}
+
+	LastTakeHitInfo.ActualDamage = Damage;
+	LastTakeHitInfo.PawnInstigator = Cast<AShooterCharacter>(PawnInstigator);
+	LastTakeHitInfo.DamageCauser = DamageCauser;
+	LastTakeHitInfo.SetDamageEvent(DamageEvent);
+	LastTakeHitInfo.bKilled = bKilled;
+	LastTakeHitInfo.EnsureReplication();
+
+	LastTakeHitTimeTimeout = TimeoutTime;
+}
+
 void AShooterBarricade::PlayHit(float DamageTaken, struct FDamageEvent const& DamageEvent, class APawn* PawnInstigator, class AActor* DamageCauser)
 {
-	//if (GetLocalRole() == ROLE_Authority)
-	//{
-	//	ReplicateHit(DamageTaken, DamageEvent, PawnInstigator, DamageCauser, false);
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		ReplicateHit(DamageTaken, DamageEvent, PawnInstigator, DamageCauser, false);
 
 	//	// play the force feedback effect on the client player controller
 	//	AShooterPlayerController* PC = Cast<AShooterPlayerController>(Controller);
@@ -217,7 +259,7 @@ void AShooterBarricade::PlayHit(float DamageTaken, struct FDamageEvent const& Da
 	//	{
 	//		InstigatorHUD->NotifyEnemyHit();
 	//	}
-	//}
+	}
 }
 
 float AShooterBarricade::TakeDamage(float Damage, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, class AActor* DamageCauser)
@@ -366,12 +408,12 @@ void AShooterBarricade::OnDeath(float KillingDamage, struct FDamageEvent const& 
 
 void AShooterBarricade::OnRep_LastTakeHitInfo()
 {
-	/*if (LastTakeHitInfo.bKilled)
+	if (LastTakeHitInfo.bKilled)
 	{
 		OnDeath(LastTakeHitInfo.ActualDamage, LastTakeHitInfo.GetDamageEvent(), LastTakeHitInfo.PawnInstigator.Get(), LastTakeHitInfo.DamageCauser.Get());
 	}
 	else
 	{
 		PlayHit(LastTakeHitInfo.ActualDamage, LastTakeHitInfo.GetDamageEvent(), LastTakeHitInfo.PawnInstigator.Get(), LastTakeHitInfo.DamageCauser.Get());
-	}*/
+	}
 }

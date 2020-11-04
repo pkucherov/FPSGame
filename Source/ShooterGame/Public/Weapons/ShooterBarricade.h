@@ -2,7 +2,8 @@
 
 #pragma once
 
-#include "GameFramework/Actor.h"
+//#include "GameFramework/Actor.h"
+#include "Engine/StaticMeshActor.h"
 #include "ShooterWeapon_Projectile.h"
 #include "ShooterBarricade.generated.h"
 
@@ -11,7 +12,7 @@ class USphereComponent;
 
 // 
 UCLASS(Abstract, Blueprintable)
-class AShooterBarricade : public AActor
+class AShooterBarricade : public AStaticMeshActor
 {
 	GENERATED_UCLASS_BODY()
 
@@ -25,6 +26,12 @@ class AShooterBarricade : public AActor
 	UFUNCTION()
 	void OnImpact(const FHitResult& HitResult);
 
+public:
+
+	/** Identifies if pawn is in its dying state */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Health)
+		uint32 bIsDying : 1;
+
 	// Current health of the Pawn
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated, Category = Health)
 	float Health;
@@ -36,7 +43,7 @@ class AShooterBarricade : public AActor
 	virtual void KilledBy(class APawn* EventInstigator);
 
 	/** Returns True if the pawn can die in the current state */
-	//virtual bool CanDie(float KillingDamage, FDamageEvent const& DamageEvent, AController* Killer, AActor* DamageCauser) const;
+	virtual bool CanDie(float KillingDamage, FDamageEvent const& DamageEvent, AController* Killer, AActor* DamageCauser) const;
 
 	/**
 	* Kills pawn.  Server/authority only.
@@ -100,10 +107,16 @@ protected:
 	/** sets up the replication for taking a hit */
 	void ReplicateHit(float Damage, struct FDamageEvent const& DamageEvent, class APawn* InstigatingPawn, class AActor* DamageCauser, bool bKilled);
 
+	/** Replicate where this pawn was last hit and damaged */
+	UPROPERTY(Transient, ReplicatedUsing = OnRep_LastTakeHitInfo)
+	struct FTakeHitInfo LastTakeHitInfo;
+
+	/** Time at which point the last take hit info for the actor times out and won't be replicated; Used to stop join-in-progress effects all over the screen */
+	float LastTakeHitTimeTimeout;
+
 	/** play hit or death on client */
 	UFUNCTION()
-		void OnRep_LastTakeHitInfo();
-
+	void OnRep_LastTakeHitInfo();
 
 protected:
 	/** Returns MovementComp subobject **/
