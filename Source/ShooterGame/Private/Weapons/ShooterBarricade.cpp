@@ -13,8 +13,8 @@ AShooterBarricade::AShooterBarricade(const FObjectInitializer& ObjectInitializer
 	CollisionComp->AlwaysLoadOnClient = true;
 	CollisionComp->AlwaysLoadOnServer = true;
 	CollisionComp->bTraceComplexOnMove = true;
-	CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	CollisionComp->SetCollisionObjectType(COLLISION_PROJECTILE);
+	CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	CollisionComp->SetCollisionObjectType(COLLISION_BARRICADE);
 	CollisionComp->SetCollisionResponseToAllChannels(ECR_Ignore);
 	CollisionComp->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
 	CollisionComp->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
@@ -38,6 +38,8 @@ AShooterBarricade::AShooterBarricade(const FObjectInitializer& ObjectInitializer
 	SetRemoteRoleForBackwardsCompat(ROLE_SimulatedProxy);
 	bReplicates = true;
 	SetReplicatingMovement(true);
+
+	bExploded = true;
 }
 
 void AShooterBarricade::PostInitializeComponents()
@@ -52,7 +54,8 @@ void AShooterBarricade::PostInitializeComponents()
 		OwnerWeapon->ApplyWeaponConfig(WeaponConfig);
 	}
 
-	SetLifeSpan(WeaponConfig.ProjectileLife);
+	//Otherwise barricade disappears after this lifespan
+//	SetLifeSpan(WeaponConfig.ProjectileLife);
 	MyController = GetInstigatorController();
 }
 
@@ -140,38 +143,38 @@ void AShooterBarricade::OnRep_Exploded()
 
 bool AShooterBarricade::CanDie(float KillingDamage, FDamageEvent const& DamageEvent, AController* Killer, AActor* DamageCauser) const
 {
-	if (bIsDying										// already dying
-		|| IsPendingKill()								// already destroyed
-		|| GetLocalRole() != ROLE_Authority				// not authority
-		|| GetWorld()->GetAuthGameMode<AShooterGameMode>() == NULL
-		|| GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetMatchState() == MatchState::LeavingMap)	// level transition occurring
-	{
-		return false;
-	}
+	//if (bIsDying										// already dying
+	//	|| IsPendingKill()								// already destroyed
+	//	|| GetLocalRole() != ROLE_Authority				// not authority
+	//	|| GetWorld()->GetAuthGameMode<AShooterGameMode>() == NULL
+	//	|| GetWorld()->GetAuthGameMode<AShooterGameMode>()->GetMatchState() == MatchState::LeavingMap)	// level transition occurring
+	//{
+	//	return false;
+	//}
 
 	return true;
 }
 
 bool AShooterBarricade::Die(float KillingDamage, FDamageEvent const& DamageEvent, AController* Killer, AActor* DamageCauser)
 {
-//	if (!CanDie(KillingDamage, DamageEvent, Killer, DamageCauser))
-//	{
-//		return false;
-//	}
-//
-//	Health = FMath::Min(0.0f, Health);
-//
-//	// if this is an environmental death then refer to the previous killer so that they receive credit (knocked into lava pits, etc)
-//	UDamageType const* const DamageType = DamageEvent.DamageTypeClass ? DamageEvent.DamageTypeClass->GetDefaultObject<UDamageType>() : GetDefault<UDamageType>();
-//	Killer = GetDamageInstigator(Killer, *DamageType);
-//
-//	/*AController* const KilledPlayer = (Controller != NULL) ? Controller : Cast<AController>(GetOwner());
-//	GetWorld()->GetAuthGameMode<AShooterGameMode>()->Killed(Killer, KilledPlayer, this, DamageType);*/
-//
-//	NetUpdateFrequency = GetDefault<AShooterBarricade>()->NetUpdateFrequency;
-//	//GetCharacterMovement()->ForceReplicationUpdate();
-//
-//	OnDeath(KillingDamage, DamageEvent, Killer ? Killer->GetPawn() : NULL, DamageCauser);
+	if (!CanDie(KillingDamage, DamageEvent, Killer, DamageCauser))
+	{
+		return false;
+	}
+
+	Health = FMath::Min(0.0f, Health);
+
+	// if this is an environmental death then refer to the previous killer so that they receive credit (knocked into lava pits, etc)
+	UDamageType const* const DamageType = DamageEvent.DamageTypeClass ? DamageEvent.DamageTypeClass->GetDefaultObject<UDamageType>() : GetDefault<UDamageType>();
+	//Killer = GetDamageInstigator(Killer, *DamageType);
+
+	//AController* const KilledPlayer = (Controller != NULL) ? Controller : Cast<AController>(GetOwner());
+	//GetWorld()->GetAuthGameMode<AShooterGameMode>()->Killed(Killer, KilledPlayer, this, DamageType);
+
+	//NetUpdateFrequency = GetDefault<AShooterCharacter>()->NetUpdateFrequency;
+	//GetCharacterMovement()->ForceReplicationUpdate();
+
+	OnDeath(KillingDamage, DamageEvent, Killer ? Killer->GetPawn() : NULL, DamageCauser);
 
 	return true;
 }
@@ -270,33 +273,33 @@ float AShooterBarricade::TakeDamage(float Damage, struct FDamageEvent const& Dam
 	//	return 0.f;
 	//}
 
-	//if (Health <= 0.f)
-	//{
-	//	return 0.f;
-	//}
+	if (Health <= 0.f)
+	{
+		return 0.f;
+	}
 
 	//// Modify based on game rules.
 	//AShooterGameMode* const Game = GetWorld()->GetAuthGameMode<AShooterGameMode>();
 	//Damage = Game ? Game->ModifyDamage(Damage, this, DamageEvent, EventInstigator, DamageCauser) : 0.f;
 
-	//const float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
-	//if (ActualDamage > 0.f)
-	//{
-	//	Health -= ActualDamage;
-	//	if (Health <= 0)
-	//	{
-	//		Die(ActualDamage, DamageEvent, EventInstigator, DamageCauser);
-	//	}
-	//	else
-	//	{
-	//		PlayHit(ActualDamage, DamageEvent, EventInstigator ? EventInstigator->GetPawn() : NULL, DamageCauser);
-	//	}
+	const float ActualDamage = Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+	if (ActualDamage > 0.f)
+	{
+		Health -= ActualDamage;
+		if (Health <= 0)
+		{
+			Die(ActualDamage, DamageEvent, EventInstigator, DamageCauser);
+		}
+		else
+		{
+			PlayHit(ActualDamage, DamageEvent, EventInstigator ? EventInstigator->GetPawn() : NULL, DamageCauser);
+		}
 
-	//	MakeNoise(1.0f, EventInstigator ? EventInstigator->GetPawn() : this);
-	//}
+		//MakeNoise(1.0f, EventInstigator ? EventInstigator->GetPawn() : this);
+	}
 
-	//return ActualDamage;
-	return 1.0;
+	return ActualDamage;
+	//return 1.0;
 }
 
 
@@ -320,18 +323,18 @@ void AShooterBarricade::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& 
 
 void AShooterBarricade::OnDeath(float KillingDamage, struct FDamageEvent const& DamageEvent, class APawn* PawnInstigator, class AActor* DamageCauser)
 {
-	//if (bIsDying)
-	//{
-	//	return;
-	//}
+	if (bIsDying)
+	{
+		return;
+	}
 
-	//SetReplicatingMovement(false);
-	//TearOff();
-	//bIsDying = true;
+	SetReplicatingMovement(false);
+	TearOff();
+	bIsDying = true;
 
-	//if (GetLocalRole() == ROLE_Authority)
-	//{
-	//	ReplicateHit(KillingDamage, DamageEvent, PawnInstigator, DamageCauser, true);
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		ReplicateHit(KillingDamage, DamageEvent, PawnInstigator, DamageCauser, true);
 
 	//	// play the force feedback effect on the client player controller
 	//	AShooterPlayerController* PC = Cast<AShooterPlayerController>(Controller);
@@ -345,7 +348,7 @@ void AShooterBarricade::OnDeath(float KillingDamage, struct FDamageEvent const& 
 	//			PC->ClientPlayForceFeedback(DamageType->KilledForceFeedback, FFParams);
 	//		}
 	//	}
-	//}
+	}
 
 	//// cannot use IsLocallyControlled here, because even local client's controller may be NULL here
 	//if (GetNetMode() != NM_DedicatedServer && DeathSound && Mesh1P && Mesh1P->IsVisible())
