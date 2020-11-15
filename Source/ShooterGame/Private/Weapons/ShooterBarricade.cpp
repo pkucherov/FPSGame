@@ -118,7 +118,7 @@ void AShooterBarricade::Disable()
 	MovementComp->StopMovementImmediately();
 
 	// give clients some time to show explosion
-	SetLifeSpan(2.0f);
+	SetLifeSpan(1.0f);
 }
 
 ///CODE_SNIPPET_START: AActor::GetActorLocation AActor::GetActorRotation
@@ -299,7 +299,6 @@ float AShooterBarricade::TakeDamage(float Damage, struct FDamageEvent const& Dam
 	}
 
 	return ActualDamage;
-	//return 1.0;
 }
 
 
@@ -335,6 +334,11 @@ void AShooterBarricade::OnDeath(float KillingDamage, struct FDamageEvent const& 
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		ReplicateHit(KillingDamage, DamageEvent, PawnInstigator, DamageCauser, true);
+
+		//Now Destroy the Barricade given its "death"
+		//TODO: Put EXPLODE FX here as a placeholder
+		Disable();
+		
 
 	//	// play the force feedback effect on the client player controller
 	//	AShooterPlayerController* PC = Cast<AShooterPlayerController>(Controller);
