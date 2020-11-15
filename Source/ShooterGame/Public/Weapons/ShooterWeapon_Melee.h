@@ -73,7 +73,7 @@ struct FMeleeWeaponData
 		// No firing spread for melee weapons
 		FiringSpreadIncrement = 0.0f;
 		FiringSpreadMax = 0.0f;
-		WeaponRange = 10.0f;
+		WeaponRange = 500.0f;
 		HitDamage = 10;
 		DamageType = UDamageType::StaticClass();
 		ClientSideHitLeeway = 200.0f;
