@@ -337,6 +337,23 @@ void AShooterBarricade::OnDeath(float KillingDamage, struct FDamageEvent const& 
 
 		//Now Destroy the Barricade given its "death"
 		//TODO: Put EXPLODE FX here as a placeholder
+
+		//FPointDamageEvent const* const PointDamageEvent = (FPointDamageEvent*)(&DamageEvent);dd
+
+		UDamageType const* const DamageTypeCDO = DamageEvent.DamageTypeClass ? DamageEvent.DamageTypeClass->GetDefaultObject<UDamageType>() : GetDefault<UDamageType>();
+		if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
+		{
+			FPointDamageEvent* const PointDamageEvent = (FPointDamageEvent*)&DamageEvent;
+			Explode(PointDamageEvent->HitInfo);
+		}
+		else if (DamageEvent.IsOfType(FRadialDamageEvent::ClassID))
+		{
+			FRadialDamageEvent* const RadialDamageEvent = (FRadialDamageEvent*)&DamageEvent;
+			//if (ActualDamage != 0.f)
+			//{
+			FHitResult const& Hit = (RadialDamageEvent->ComponentHits.Num() > 0) ? RadialDamageEvent->ComponentHits[0] : FHitResult();
+			Explode(Hit);
+		}
 		Disable();
 		
 
