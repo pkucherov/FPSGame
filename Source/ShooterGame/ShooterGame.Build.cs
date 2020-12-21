@@ -43,7 +43,10 @@ public class ShooterGame : ModuleRules
 				"ApplicationCore",
 				"ReplicationGraph",
 				"PakFile",
-				"RHI"
+				"RHI",
+				"GameplayAbilities",
+				"GameplayTags",
+				"GameplayTasks",
 			}
 		);
 
