@@ -30,6 +30,7 @@ public class ShooterGame : ModuleRules
 				"AIModule",
 				"GameplayTasks",
 				"Gauntlet",
+				"GASShooter"
 			}
 		);
 
