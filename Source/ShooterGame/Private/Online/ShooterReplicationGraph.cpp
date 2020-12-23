@@ -98,6 +98,12 @@
 #include "Weapons/ShooterWeapon.h"
 #include "Pickups/ShooterPickup.h"
 
+// Need to include GAS classes otherwise it throws a nullptr error when trying to find those classees
+// PlayerState is used to store data across sessions, PlayerController is replicated for each client by the server so that each client has a single PlayerController instance
+#include "GASShooter/Public/Weapons/GSWeapon.h"
+#include "GASShooter/Public/Weapons/GSProjectile.h"
+#include "GASShooter/Public/Player/GSPlayerState.h"
+
 DEFINE_LOG_CATEGORY( LogShooterReplicationGraph );
 
 float CVar_ShooterRepGraph_DestructionInfoMaxDist = 30000.f;

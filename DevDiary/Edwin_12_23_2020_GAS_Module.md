@@ -22,3 +22,4 @@ http://cairansteverink.nl/cairansteverink/blog/creating-an-editor-module-in-unre
 https://www.ue4community.wiki/creating-cpp-module-oshdsg2t
 https://answers.unrealengine.com/questions/23384/what-is-the-difference-between-publicdependencymod.html
 https://answers.unrealengine.com/questions/20310/explanation-of-source-code-folder-structure.html
+https://answers.unrealengine.com/questions/942407/view.html?sort=oldest
