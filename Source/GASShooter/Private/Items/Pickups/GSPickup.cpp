@@ -24,7 +24,7 @@ AGSPickup::AGSPickup()
 
 	CollisionComp = CreateDefaultSubobject<UCapsuleComponent>(FName("CollisionComp"));
 	CollisionComp->InitCapsuleSize(40.0f, 50.0f);
-	CollisionComp->SetCollisionObjectType(GASCOLLISION_PICKUP);
+	CollisionComp->SetCollisionObjectType(COLLISION_GASPICKUP);
 	CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	CollisionComp->SetCollisionResponseToAllChannels(ECR_Ignore);
 	CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
