@@ -34,7 +34,7 @@ AGSWeapon::AGSWeapon()
 
 	CollisionComp = CreateDefaultSubobject<UCapsuleComponent>(FName("CollisionComponent"));
 	CollisionComp->InitCapsuleSize(40.0f, 50.0f);
-	CollisionComp->SetCollisionObjectType(COLLISION_PICKUP);
+	CollisionComp->SetCollisionObjectType(GASCOLLISION_PICKUP);
 	CollisionComp->SetCollisionEnabled(ECollisionEnabled::NoCollision); // Manually enable when in pickup mode
 	CollisionComp->SetCollisionResponseToAllChannels(ECR_Ignore);
 	CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);

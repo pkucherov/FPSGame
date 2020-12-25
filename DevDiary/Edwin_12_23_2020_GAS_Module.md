@@ -8,6 +8,28 @@ Moreover, it's a good idea to keep the complex and suspect-to-change Gameplay Ab
 
 Pro-tip: If copying over files and creating new files, to see them pop in Visual Studio, have to right click on unreal exe and "Generate Project Files"
 
+Fix these logging issues:
+Macro redefinitions for COLLISION_PICKUP and COLLISION_PROJECTILE
+
+[2020.12.25-02.39.19:031][  0]LogConsoleManager: Warning: Console object named 'replay.MontageErrorThreshold' already exists but is being registered again, but we weren't expected it to be! (FConsoleManager::AddConsoleObject)
+'UE4Editor-Win64-DebugGame.exe' (Win32): Loaded 'C:\Users\edwin\Documents\Unreal Projects\FPSGame\Binaries\Win64\UE4Editor-ShooterGame-Win64-DebugGame.dll'. Symbols loaded.
+[2020.12.25-02.39.19:200][  0]LogLinker: Warning: Failed to load '/Game/GASShooter/Characters/Hero/BP_HeroCharacter': Can't find file.
+[2020.12.25-02.39.19:200][  0]LogLinker: Warning: Failed to load '/Game/GASShooter/Characters/Hero/BP_HeroCharacter': Can't find file.
+[2020.12.25-02.39.19:200][  0]LogUObjectGlobals: Warning: Failed to find object 'Class /Game/GASShooter/Characters/Hero/BP_HeroCharacter.BP_HeroCharacter_C'
+[2020.12.25-02.39.19:201][  0]LogTemp: Error: AGASShooterGameModeBase::AGASShooterGameModeBase() Failed to find HeroClass. If it was moved, please update the reference location in C++.
+[2020.12.25-02.39.19:201][  0]LogLinker: Warning: Failed to load '/Game/GASShooter/UI/WC_DamageText': Can't find file.
+[2020.12.25-02.39.19:201][  0]LogLinker: Warning: Failed to load '/Game/GASShooter/UI/WC_DamageText': Can't find file.
+[2020.12.25-02.39.19:202][  0]LogUObjectGlobals: Warning: Failed to find object 'Class /Game/GASShooter/UI/WC_DamageText.WC_DamageText_C'
+[2020.12.25-02.39.19:202][  0]LogTemp: Error: AGSCharacterBase::AGSCharacterBase() Failed to find DamageNumberClass. If it was moved, please update the reference location in C++.
+[2020.12.25-02.39.19:202][  0]LogTemp: Error: AGSCharacterBase::AGSCharacterBase() Failed to find DamageNumberClass. If it was moved, please update the reference location in C++.
+[2020.12.25-02.39.19:203][  0]LogLinker: Warning: Failed to load '/Game/GASShooter/UI/UI_FloatingStatusBar_Hero': Can't find file.
+[2020.12.25-02.39.19:203][  0]LogLinker: Warning: Failed to load '/Game/GASShooter/UI/UI_FloatingStatusBar_Hero': Can't find file.
+[2020.12.25-02.39.19:203][  0]LogUObjectGlobals: Warning: Failed to find object 'Class /Game/GASShooter/UI/UI_FloatingStatusBar_Hero.UI_FloatingStatusBar_Hero_C'
+[2020.12.25-02.39.19:203][  0]LogTemp: Error: AGSHeroCharacter::AGSHeroCharacter() Failed to find UIFloatingStatusBarClass. If it was moved, please update the reference location in C++.
+
+[2020.12.25-02.34.54:597][  0]LogClass: Warning: Property ShooterBarricade::Health (SourceClass: ShooterBarricade) was not registered in GetLifetimeReplicatedProps. This property will not be replicated. Use DISABLE_REPLICATED_PROPERTY if not replicating was intentional.
+[2020.12.25-02.34.54:598][  0]LogClass: Warning: Property ShooterBarricade::LastTakeHitInfo (SourceClass: ShooterBarricade) was not registered in GetLifetimeReplicatedProps. This property will not be replicated. Use DISABLE_REPLICATED_PROPERTY if not replicating was intentional.
+
 Good tutorials
 https://docs.unrealengine.com/en-US/ProgrammingAndScripting/GameplayArchitecture/Gameplay/index.html
 http://kantandev.com/articles/ue4-code-modules

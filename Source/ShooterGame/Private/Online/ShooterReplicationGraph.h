@@ -4,6 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "ReplicationGraph.h"
+#include "GASShooter/Public/Weapons/GSWeapon.h"
+#include "GASShooter/Public/Weapons/GSProjectile.h"
+#include "GASShooter/Public/Player/GSPlayerState.h"
+#include "GASShooter/Public/Items/Pickups/GSPickup.h"
 #include "ShooterReplicationGraph.generated.h"
 
 class AShooterCharacter;
@@ -13,6 +17,8 @@ class AGameplayDebuggerCategoryReplicator;
 
 class AGSHeroCharacter;
 class AGSWeapon;
+class AGSPickup;
+
 
 DECLARE_LOG_CATEGORY_EXTERN( LogShooterReplicationGraph, Display, All );
 

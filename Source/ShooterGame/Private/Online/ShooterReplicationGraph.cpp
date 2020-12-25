@@ -203,6 +203,11 @@ void UShooterReplicationGraph::InitGlobalActorClassSettings()
 	AddInfo( AInfo::StaticClass(),									EClassRepNodeMapping::RelevantAllConnections);	// Non spatialized, relevant to all
 	AddInfo( AShooterPickup::StaticClass(),							EClassRepNodeMapping::Spatialize_Static);		// Spatialized and never moves. Routes to GridNode.
 
+	AddInfo( AGSWeapon::StaticClass(),							EClassRepNodeMapping::NotRouted);				// Handled via DependantActor replication (Pawn)
+	AddInfo( AGSPlayerState::StaticClass(),							EClassRepNodeMapping::NotRouted);				// Special cased via UShooterReplicationGraphNode_PlayerStateFrequencyLimiter
+	AddInfo( AGSPickup::StaticClass(),							EClassRepNodeMapping::Spatialize_Static);		// Spatialized and never moves. Routes to GridNode.
+
+
 #if WITH_GAMEPLAY_DEBUGGER
 	AddInfo( AGameplayDebuggerCategoryReplicator::StaticClass(),	EClassRepNodeMapping::NotRouted);				// Replicated via UShooterReplicationGraphNode_AlwaysRelevant_ForConnection
 #endif
@@ -304,6 +309,18 @@ void UShooterReplicationGraph::InitGlobalActorClassSettings()
 		{
 			continue;
 		}
+
+		//Default non-specific replication policies to a ClassIsSpatialized to false
+		//https://answers.unrealengine.com/questions/942407/view.html?sort=oldest
+		/*bool bClassIsSpatialized;
+
+		if (ClassRepNodePolicies.Get(ReplicatedClass) != nullptr)
+		{
+			bClassIsSpatialized = false;
+		}
+		else {
+			bClassIsSpatialized = IsSpatialized(ClassRepNodePolicies.GetChecked(ReplicatedClass));
+		}*/
 
 		const bool bClassIsSpatialized = IsSpatialized(ClassRepNodePolicies.GetChecked(ReplicatedClass));
 
